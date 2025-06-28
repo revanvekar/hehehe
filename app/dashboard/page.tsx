@@ -12,7 +12,7 @@ import { BookOpen, Brain, Clock, TrendingUp, Plus, Lightbulb } from 'lucide-reac
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [dailyPrompt, setDailyPrompt] = useState('');
   const [todaysTopic, setTodaysTopic] = useState('');
   const [subjects, setSubjects] = useState([]);
@@ -113,7 +113,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 bg-background min-h-screen">
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -142,7 +142,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
+          <Card className="border-primary/20 bg-card text-card-foreground">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-primary" />
@@ -176,7 +176,7 @@ export default function Dashboard() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-card text-card-foreground">
               <CardContent className="flex items-center p-6">
                 <BookOpen className="h-8 w-8 text-primary mr-4" />
                 <div>
@@ -188,7 +188,7 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-card text-card-foreground">
               <CardContent className="flex items-center p-6">
                 <Brain className="h-8 w-8 text-purple-500 mr-4" />
                 <div>
@@ -200,7 +200,7 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-card text-card-foreground">
               <CardContent className="flex items-center p-6">
                 <TrendingUp className="h-8 w-8 text-green-500 mr-4" />
                 <div>
@@ -212,7 +212,7 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-card text-card-foreground">
               <CardContent className="flex items-center p-6">
                 <Clock className="h-8 w-8 text-orange-500 mr-4" />
                 <div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card onClick={() => router.push('/flashcards')} className="cursor-pointer hover:bg-purple-50 transition-colors">
+            <Card onClick={() => router.push('/flashcards')} className="bg-card text-card-foreground cursor-pointer hover:bg-muted/50 transition-colors">
               <CardContent className="flex items-center p-6">
                 <Brain className="h-8 w-8 text-purple-700 mr-4" />
                 <div>
@@ -245,7 +245,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <Card>
+            <Card className="bg-card text-card-foreground">
               <CardHeader>
                 <CardTitle>Recent Subjects</CardTitle>
                 <CardDescription>
@@ -300,19 +300,19 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+            <Card className="border-yellow-200 bg-yellow-50 dark:bg-zinc-800/80 dark:border-yellow-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-yellow-500" />
+                <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                  <Lightbulb className="h-5 w-5" />
                   Did You Know?
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-relaxed">{funFact}</p>
+                <p className="text-sm leading-relaxed text-yellow-900 dark:text-white">{funFact}</p>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="mt-4 text-yellow-700 hover:text-yellow-800"
+                  className="mt-4 text-yellow-700 dark:text-yellow-300 hover:text-yellow-800 dark:hover:text-yellow-400"
                   onClick={loadFunFact}
                 >
                   Tell me more!

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,11 @@ import {
   LogOut,
   Menu,
   X,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -41,6 +44,10 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -68,15 +75,15 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Mobile sidebar overlay */}
+    <div className="relative h-screen bg-background text-foreground">
+      {/* Sidebar overlay for all screens */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -87,7 +94,8 @@ export default function DashboardLayout({
         variants={sidebarVariants}
         initial="closed"
         animate={sidebarOpen ? "open" : "closed"}
-        className="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 lg:relative lg:translate-x-0 lg:z-0"
+        className="fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border shadow-lg"
+        style={{ pointerEvents: sidebarOpen ? 'auto' : 'none' }}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
@@ -100,7 +108,6 @@ export default function DashboardLayout({
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -134,7 +141,7 @@ export default function DashboardLayout({
           </nav>
 
           {/* User menu */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-200 p-4 flex flex-col gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start h-12 px-4">
@@ -160,21 +167,32 @@ export default function DashboardLayout({
       </motion.div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen" style={{ marginLeft: 0 }}>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
+        <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden"
+              className="z-50"
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center space-x-4">
-              {/* Header content can be added here */}
-            </div>
+            {/* Theme toggle always visible in header */}
+            {mounted && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center space-x-4">
+            {/* Header content can be added here */}
           </div>
         </header>
 

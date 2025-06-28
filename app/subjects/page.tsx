@@ -277,7 +277,7 @@ export default function Subjects() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
+            className="flex flex-1 flex-col items-center justify-center min-h-[60vh] text-center"
           >
             <BookOpen className="h-24 w-24 text-muted-foreground mx-auto mb-6" />
             <h2 className="text-2xl font-semibold mb-2">No subjects yet</h2>
