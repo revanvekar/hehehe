@@ -7,11 +7,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { RotateCcw, Brain, Check, X, Sparkles } from 'lucide-react';
+import { RotateCcw, Brain, Check, X, Sparkles, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+interface Flashcard {
+  _id: string;
+  question: string;
+  answer: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  subjectId: string;
+  userId: string;
+  isGenerated: boolean;
+  createdAt: string;
+}
 
 export default function Flashcards() {
-  const [flashcards, setFlashcards] = useState([]);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +87,56 @@ export default function Flashcards() {
       toast.error('Failed to generate flashcards');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const deleteAllFlashcards = async () => {
+    try {
+      const response = await fetch('/api/flashcards?all=true', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Deleted ${data.deletedCount} flashcards`);
+        setFlashcards([]);
+        setCurrentIndex(0);
+        setSessionStats({ correct: 0, incorrect: 0, total: 0 });
+      } else {
+        toast.error('Failed to delete flashcards');
+      }
+    } catch (error) {
+      toast.error('Failed to delete flashcards');
+    }
+  };
+
+  const deleteFlashcard = async (flashcardId: string) => {
+    try {
+      const response = await fetch(`/api/flashcards?id=${flashcardId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        toast.success('Flashcard deleted');
+        // Remove from local state
+        setFlashcards(prev => prev.filter(card => card._id !== flashcardId));
+        setSessionStats(prev => ({ ...prev, total: prev.total - 1 }));
+        
+        // Adjust current index if needed
+        if (currentIndex >= flashcards.length - 1 && currentIndex > 0) {
+          setCurrentIndex(prev => prev - 1);
+        }
+      } else {
+        toast.error('Failed to delete flashcard');
+      }
+    } catch (error) {
+      toast.error('Failed to delete flashcard');
     }
   };
 
@@ -140,10 +212,34 @@ export default function Flashcards() {
               Generate AI Cards
             </Button>
             {flashcards.length > 0 && (
-              <Button variant="outline" onClick={resetSession}>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset Session
-              </Button>
+              <>
+                <Button variant="outline" onClick={resetSession}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset Session
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete All
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete All Flashcards?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete all {flashcards.length} flashcards. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={deleteAllFlashcards} className="bg-red-600 hover:bg-red-700">
+                        Delete All
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
         </div>
@@ -208,13 +304,44 @@ export default function Flashcards() {
                         <CardHeader className="text-center">
                           <div className="flex items-center justify-between">
                             <Badge variant="secondary">Question</Badge>
-                            <Badge className={
-                              currentCard?.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                              currentCard?.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }>
-                              {currentCard?.difficulty}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={
+                                currentCard?.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                                currentCard?.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }>
+                                {currentCard?.difficulty}
+                              </Badge>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Flashcard?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete this flashcard. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => deleteFlashcard(currentCard._id)} 
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="flex items-center justify-center h-full">
@@ -234,13 +361,44 @@ export default function Flashcards() {
                         <CardHeader className="text-center">
                           <div className="flex items-center justify-between">
                             <Badge>Answer</Badge>
-                            <Badge className={
-                              currentCard?.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                              currentCard?.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }>
-                              {currentCard?.difficulty}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={
+                                currentCard?.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                                currentCard?.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }>
+                                {currentCard?.difficulty}
+                              </Badge>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Flashcard?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete this flashcard. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => deleteFlashcard(currentCard._id)} 
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="flex items-center justify-center h-full">
